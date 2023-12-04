@@ -1,11 +1,11 @@
 {
-  "neoforge:conditions": [
+  "parent": "minecraft:recipes/root",
+  "conditions": [
     {
       "type": "neoforge:tag_empty",
       "tag": "minecraft:planks"
     }
   ],
-  "parent": "minecraft:recipes/root",
   "criteria": {
     "has_diamond_block": {
       "conditions": {

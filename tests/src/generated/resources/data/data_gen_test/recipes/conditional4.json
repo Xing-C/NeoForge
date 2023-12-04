@@ -1,5 +1,7 @@
 {
-  "neoforge:conditions": [
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "conditions": [
     {
       "type": "neoforge:not",
       "value": {
@@ -8,8 +10,6 @@
       }
     }
   ],
-  "type": "minecraft:crafting_shaped",
-  "category": "building",
   "key": {
     "X": {
       "item": "minecraft:diamond_block"
