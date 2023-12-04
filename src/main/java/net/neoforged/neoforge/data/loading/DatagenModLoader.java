@@ -16,7 +16,6 @@ import net.minecraft.data.registries.VanillaRegistries;
 import net.minecraft.server.Bootstrap;
 import net.neoforged.fml.ModLoader;
 import net.neoforged.fml.ModWorkManager;
-import net.neoforged.neoforge.client.ClientHooks;
 import net.neoforged.neoforge.common.data.ExistingFileHelper;
 import net.neoforged.neoforge.data.event.GatherDataEvent;
 import org.apache.logging.log4j.LogManager;
@@ -47,9 +46,6 @@ public class DatagenModLoader {
         if (!mods.contains("neoforge")) {
             // If we aren't generating data for forge, automatically add forge as an existing so mods can access forge's data
             existingMods.add("neoforge");
-        }
-        if (clientGenerators) {
-            ClientHooks.registerSpriteSourceTypes();
         }
         existingFileHelper = new ExistingFileHelper(existingPacks, existingMods, structureValidator, assetIndex, assetsDir);
         ModLoader.get().runEventGenerator(mc -> new GatherDataEvent(mc, dataGeneratorConfig.makeGenerator(p -> dataGeneratorConfig.isFlat() ? p : p.resolve(mc.getModId()),
