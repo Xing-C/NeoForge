@@ -5,74 +5,108 @@
 
 package net.neoforged.neoforge.registries;
 
-import com.mojang.serialization.Lifecycle;
+import com.mojang.logging.LogUtils;
 import java.util.ArrayList;
+import java.util.IdentityHashMap;
 import java.util.List;
-import net.minecraft.core.Registry;
-import net.minecraft.core.WritableRegistry;
+import java.util.Map;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
+import net.minecraft.core.MappedRegistry;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
 import net.neoforged.bus.api.Event;
 import net.neoforged.fml.event.IModBusEvent;
+import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
 
 /**
- * Fired when new registries can be constructed and registered.
- * This event is fired to register builtin registries, like the registries in {@link BuiltInRegistries}.
- * Builtin registries are registries which can only load entries registered in code.
- *
- * <p>
- * For registering datapack registries that only load entries through JSON, see {@link DataPackRegistryEvent.NewRegistry}.
- * </p>
- *
- * <p>This event is fired on the {@linkplain net.neoforged.fml.javafmlmod.FMLJavaModLoadingContext#getModEventBus() mod-specific event bus},
- * on both {@linkplain net.neoforged.fml.LogicalSide logical sides}.</p>
- *
- * @see ModifyRegistriesEvent
+ * Register new registries when you receive this event through {@link RegistryBuilder} and {@link #create(RegistryBuilder)}.
  */
 public class NewRegistryEvent extends Event implements IModBusEvent {
-    private final List<Registry<?>> registries = new ArrayList<>();
+    private static final Logger LOGGER = LogUtils.getLogger();
+    private final List<RegistryData<?>> registries = new ArrayList<>();
 
-    NewRegistryEvent() {}
+    public NewRegistryEvent() {}
 
     /**
-     * Creates a registry using the {@code builder} and registers it.
+     * Adds a registry builder to be created.
      *
-     * @param builder the builder to turn into a {@link Registry}
-     * @return the built {@link Registry}
+     * @param builder The builder to turn into a {@link IForgeRegistry}
+     * @return A supplier of the {@link IForgeRegistry} created by the builder. Resolving too early will return null.
      */
-    public <T> Registry<T> create(RegistryBuilder<T> builder) {
-        final Registry<T> registry = builder.create();
-        register(registry);
-        return registry;
+    public <V> Supplier<IForgeRegistry<V>> create(RegistryBuilder<V> builder) {
+        return create(builder, null);
     }
 
     /**
-     * Registers an already-created registry.
-     * This allows storing registries in static final fields and registering them later.
+     * Adds a registry builder to be created.
      *
-     * @param registry the registry to register
+     * @param builder The builder to turn into a {@link IForgeRegistry}
+     * @param onFill  Called when the returned supplier is filled with the registry
+     * @return a supplier of the {@link IForgeRegistry} created by the builder. Resolving too early will return null.
      */
-    public <T> void register(Registry<T> registry) {
-        this.registries.add(registry);
+    public <V> Supplier<IForgeRegistry<V>> create(RegistryBuilder<V> builder, @Nullable Consumer<IForgeRegistry<V>> onFill) {
+        RegistryHolder<V> registryHolder = new RegistryHolder<>();
+
+        registries.add(new RegistryData<>(builder, registryHolder, onFill));
+
+        return registryHolder;
     }
 
+    @SuppressWarnings("deprecation")
     void fill() {
-        ((BaseMappedRegistry<?>) BuiltInRegistries.REGISTRY).unfreeze();
+        RuntimeException aggregate = new RuntimeException();
+        Map<RegistryBuilder<?>, IForgeRegistry<?>> builtRegistries = new IdentityHashMap<>();
 
-        for (final var registry : this.registries) {
-            registerToRootRegistry(registry);
+        if (BuiltInRegistries.REGISTRY instanceof MappedRegistry<?> rootRegistry)
+            rootRegistry.unfreeze();
+
+        for (RegistryData<?> data : this.registries) {
+            try {
+                buildRegistry(builtRegistries, data);
+            } catch (Throwable t) {
+                aggregate.addSuppressed(t);
+                return;
+            }
         }
 
-        ((WritableRegistry<?>) BuiltInRegistries.REGISTRY).freeze();
+        if (BuiltInRegistries.REGISTRY instanceof MappedRegistry<?> rootRegistry)
+            rootRegistry.freeze();
+
+        if (aggregate.getSuppressed().length > 0)
+            LOGGER.error(LogUtils.FATAL_MARKER, "Failed to create some forge registries, see suppressed exceptions for details", aggregate);
     }
 
-    @SuppressWarnings({ "unchecked", "rawtypes" })
-    private void registerToRootRegistry(Registry<?> registry) {
-        ResourceLocation registryName = registry.key().location();
-        if (BuiltInRegistries.REGISTRY.containsKey(registryName))
-            throw new IllegalStateException("Attempted duplicate registration of registry " + registryName);
+    private <T> void buildRegistry(Map<RegistryBuilder<?>, IForgeRegistry<?>> builtRegistries, RegistryData<T> data) {
+        RegistryBuilder<T> builder = data.builder;
+        IForgeRegistry<T> registry = builder.create();
 
-        ((WritableRegistry) BuiltInRegistries.REGISTRY).register(registry.key(), registry, Lifecycle.stable());
+        builtRegistries.put(builder, registry);
+
+        if (builder.getHasWrapper() && !BuiltInRegistries.REGISTRY.containsKey(registry.getRegistryName()))
+            RegistryManager.registerToRootRegistry((ForgeRegistry<?>) registry);
+
+        data.registryHolder.registry = registry;
+        if (data.onFill != null)
+            data.onFill.accept(registry);
     }
 
+    private record RegistryData<V>(
+            RegistryBuilder<V> builder,
+            RegistryHolder<V> registryHolder,
+            Consumer<IForgeRegistry<V>> onFill) {}
+
+    private static class RegistryHolder<V> implements Supplier<IForgeRegistry<V>> {
+        IForgeRegistry<V> registry = null;
+
+        @Override
+        public IForgeRegistry<V> get() {
+            return this.registry;
+        }
+    }
+
+    @Override
+    public String toString() {
+        return "RegistryEvent.NewRegistry";
+    }
 }

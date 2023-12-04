@@ -21,7 +21,6 @@ import net.minecraft.client.resources.model.BlockModelRotation;
 import net.minecraft.client.resources.model.Material;
 import net.minecraft.client.resources.model.ModelBaker;
 import net.minecraft.client.resources.model.ModelState;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.GsonHelper;
 import net.minecraft.world.entity.LivingEntity;
@@ -38,6 +37,7 @@ import net.neoforged.neoforge.client.model.geometry.IUnbakedGeometry;
 import net.neoforged.neoforge.client.model.geometry.StandaloneGeometryBakingContext;
 import net.neoforged.neoforge.client.model.geometry.UnbakedGeometryHelper;
 import net.neoforged.neoforge.fluids.FluidUtil;
+import net.neoforged.neoforge.registries.ForgeRegistries;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Quaternionf;
@@ -163,7 +163,7 @@ public class DynamicFluidContainerModel implements IUnbakedGeometry<DynamicFluid
 
             ResourceLocation fluidName = new ResourceLocation(jsonObject.get("fluid").getAsString());
 
-            Fluid fluid = BuiltInRegistries.FLUID.get(fluidName);
+            Fluid fluid = ForgeRegistries.FLUIDS.getValue(fluidName);
 
             boolean flip = GsonHelper.getAsBoolean(jsonObject, "flip_gas", false);
             boolean coverIsMask = GsonHelper.getAsBoolean(jsonObject, "cover_is_mask", true);
@@ -195,7 +195,7 @@ public class DynamicFluidContainerModel implements IUnbakedGeometry<DynamicFluid
             return FluidUtil.getFluidContained(stack)
                     .map(fluidStack -> {
                         Fluid fluid = fluidStack.getFluid();
-                        String name = BuiltInRegistries.FLUID.getKey(fluid).toString();
+                        String name = ForgeRegistries.FLUIDS.getKey(fluid).toString();
 
                         if (!cache.containsKey(name)) {
                             DynamicFluidContainerModel unbaked = this.parent.withFluid(fluid);

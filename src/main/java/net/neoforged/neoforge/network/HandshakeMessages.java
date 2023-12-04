@@ -20,8 +20,8 @@ import net.neoforged.fml.ModList;
 import net.neoforged.neoforge.client.gui.ModMismatchDisconnectedScreen;
 import net.neoforged.neoforge.network.simple.SimpleLoginMessage;
 import net.neoforged.neoforge.registries.DataPackRegistriesHooks;
+import net.neoforged.neoforge.registries.ForgeRegistry;
 import net.neoforged.neoforge.registries.RegistryManager;
-import net.neoforged.neoforge.registries.RegistrySnapshot;
 import net.neoforged.neoforgespi.language.IModInfo;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.Nullable;
@@ -234,9 +234,9 @@ public class HandshakeMessages {
     public static class S2CRegistry extends LoginIndexedMessage {
         private final ResourceLocation registryName;
         @Nullable
-        private final RegistrySnapshot snapshot;
+        private final ForgeRegistry.Snapshot snapshot;
 
-        public S2CRegistry(final ResourceLocation name, @Nullable RegistrySnapshot snapshot) {
+        public S2CRegistry(final ResourceLocation name, @Nullable ForgeRegistry.Snapshot snapshot) {
             this.registryName = name;
             this.snapshot = snapshot;
         }
@@ -251,9 +251,9 @@ public class HandshakeMessages {
 
         public static S2CRegistry decode(final FriendlyByteBuf buffer) {
             ResourceLocation name = buffer.readResourceLocation();
-            RegistrySnapshot snapshot = null;
+            ForgeRegistry.Snapshot snapshot = null;
             if (buffer.readBoolean())
-                snapshot = RegistrySnapshot.read(buffer);
+                snapshot = ForgeRegistry.Snapshot.read(buffer);
             return new S2CRegistry(name, snapshot);
         }
 
@@ -266,7 +266,7 @@ public class HandshakeMessages {
         }
 
         @Nullable
-        public RegistrySnapshot getSnapshot() {
+        public ForgeRegistry.Snapshot getSnapshot() {
             return snapshot;
         }
     }

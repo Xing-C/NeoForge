@@ -18,7 +18,6 @@ import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.LivingEntityRenderer;
 import net.minecraft.client.renderer.entity.layers.RenderLayer;
 import net.minecraft.client.renderer.texture.OverlayTexture;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -30,7 +29,8 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 import net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent;
-import net.neoforged.neoforge.registries.DeferredHolder;
+import net.neoforged.neoforge.registries.ForgeRegistries;
+import net.neoforged.neoforge.registries.ObjectHolder;
 import net.neoforged.neoforge.registries.RegisterEvent;
 
 @Mod("entity_renderer_events_test")
@@ -38,18 +38,19 @@ import net.neoforged.neoforge.registries.RegisterEvent;
 public class EntityRendererEventsTest {
     private static final ResourceLocation MY_ENTITY = new ResourceLocation("entity_renderer_events_test", "test_entity");
 
-    public static final DeferredHolder<EntityType<?>, EntityType<MyEntity>> MY_ENTITY_TYPE = DeferredHolder.create(Registries.ENTITY_TYPE, MY_ENTITY);
+    @ObjectHolder(registryName = "entity_type", value = "entity_renderer_events_test:test_entity")
+    public static EntityType<MyEntity> MY_ENTITY_TYPE;
 
     @SubscribeEvent
     public static void entityRegistry(RegisterEvent event) {
-        if (event.getRegistryKey().equals(Registries.ENTITY_TYPE)) {
-            event.register(Registries.ENTITY_TYPE, MY_ENTITY, () -> EntityType.Builder.of(MyEntity::new, MobCategory.MONSTER).build("test_entity"));
+        if (event.getRegistryKey().equals(ForgeRegistries.Keys.ENTITY_TYPES)) {
+            event.register(ForgeRegistries.Keys.ENTITY_TYPES, MY_ENTITY, () -> EntityType.Builder.of(MyEntity::new, MobCategory.MONSTER).build("test_entity"));
         }
     }
 
     @SubscribeEvent
     public static void entityRegistry(EntityAttributeCreationEvent event) {
-        event.put(MY_ENTITY_TYPE.get(), Monster.createMonsterAttributes().add(Attributes.MAX_HEALTH, 1.0D).build());
+        event.put(MY_ENTITY_TYPE, Monster.createMonsterAttributes().add(Attributes.MAX_HEALTH, 1.0D).build());
     }
 
     @Mod.EventBusSubscriber(value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.MOD)
@@ -67,12 +68,12 @@ public class EntityRendererEventsTest {
 
         @SubscribeEvent
         public static void entityRenderers(EntityRenderersEvent.RegisterRenderers event) {
-            event.registerEntityRenderer(MY_ENTITY_TYPE.get(), MyEntityRenderer::new);
+            event.registerEntityRenderer(MY_ENTITY_TYPE, MyEntityRenderer::new);
         }
 
         @SubscribeEvent
         public static void entityLayers(EntityRenderersEvent.AddLayers event) {
-            MyEntityRenderer renderer = event.getRenderer(MY_ENTITY_TYPE.get());
+            MyEntityRenderer renderer = event.getRenderer(MY_ENTITY_TYPE);
             renderer.addLayer(new MyEntityLayer(renderer, new MyEntityModel(event.getEntityModels().bakeLayer(ADDED_LAYER)), 0.5f));
         }
 

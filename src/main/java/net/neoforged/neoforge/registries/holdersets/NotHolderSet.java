@@ -71,7 +71,7 @@ public class NotHolderSet<T> implements ICustomHolderSet<T> {
 
     @Override
     public HolderSetType type() {
-        return NeoForgeMod.NOT_HOLDER_SET.value();
+        return NeoForgeMod.NOT_HOLDER_SET.get();
     }
 
     @Override

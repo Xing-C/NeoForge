@@ -7,7 +7,6 @@ package net.neoforged.neoforge.network;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
-import com.google.common.collect.Multimaps;
 import com.mojang.authlib.GameProfile;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import java.util.ArrayList;
@@ -18,7 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CancellationException;
-import java.util.concurrent.CompletionException;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -42,8 +41,8 @@ import net.neoforged.neoforge.network.ConnectionData.ModMismatchData;
 import net.neoforged.neoforge.network.simple.MessageFunctions;
 import net.neoforged.neoforge.network.simple.SimpleChannel;
 import net.neoforged.neoforge.registries.DataPackRegistriesHooks;
-import net.neoforged.neoforge.registries.RegistryManager;
-import net.neoforged.neoforge.registries.RegistrySnapshot;
+import net.neoforged.neoforge.registries.ForgeRegistry;
+import net.neoforged.neoforge.registries.GameData;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -108,7 +107,7 @@ public class HandshakeHandler {
     private final LoginNetworkDirection direction;
     private final Connection manager;
     private int packetPosition;
-    private Map<ResourceLocation, RegistrySnapshot> registrySnapshots;
+    private Map<ResourceLocation, ForgeRegistry.Snapshot> registrySnapshots;
     private Set<ResourceLocation> registriesToReceive;
     private boolean negotiationStarted = false;
     private final List<Future<Void>> pendingFutures = new ArrayList<>();
@@ -206,7 +205,7 @@ public class HandshakeHandler {
 
         this.registriesToReceive = new HashSet<>(serverModList.getRegistries());
         this.registrySnapshots = Maps.newHashMap();
-        LOGGER.debug("Expecting {} registries: {}", () -> this.registriesToReceive.size(), () -> this.registriesToReceive);
+        LOGGER.debug(ForgeRegistry.REGISTRIES, "Expecting {} registries: {}", () -> this.registriesToReceive.size(), () -> this.registriesToReceive);
     }
 
     void handleModData(HandshakeMessages.S2CModData serverModData, NetworkEvent.Context c) {
@@ -268,27 +267,26 @@ public class HandshakeHandler {
     }
 
     private boolean handleRegistryLoading(final NetworkEvent.Context contextSupplier) {
+        // We use a countdown latch to suspend the impl thread pending the client thread processing the registry data
         AtomicBoolean successfulConnection = new AtomicBoolean(false);
-        AtomicReference<Set<ResourceKey<?>>> registryMismatches = new AtomicReference<>();
-        var future = contextSupplier.enqueueWork(() -> {
+        AtomicReference<Multimap<ResourceLocation, ResourceLocation>> registryMismatches = new AtomicReference<>();
+        CountDownLatch block = new CountDownLatch(1);
+        contextSupplier.enqueueWork(() -> {
             LOGGER.debug(FMLHSMARKER, "Injecting registry snapshot from server.");
-            final Set<ResourceKey<?>> missingData = RegistryManager.applySnapshot(registrySnapshots, false, false);
+            final Multimap<ResourceLocation, ResourceLocation> missingData = GameData.injectSnapshot(registrySnapshots, false, false);
             LOGGER.debug(FMLHSMARKER, "Snapshot injected.");
             if (!missingData.isEmpty()) {
-                Multimap<ResourceLocation, ResourceLocation> missingRegs = missingData.stream()
-                        .collect(Multimaps.toMultimap(ResourceKey::registry, ResourceKey::location, () -> Multimaps.newListMultimap(new HashMap<>(), ArrayList::new)));
-                LOGGER.error(FMLHSMARKER, "Missing registry data for impl connection:\n{}", LogMessageAdapter.adapt(sb -> missingRegs.forEach((reg, entry) -> sb.append("\t").append(reg).append(": ").append(entry).append('\n'))));
+                LOGGER.error(FMLHSMARKER, "Missing registry data for impl connection:\n{}", LogMessageAdapter.adapt(sb -> missingData.forEach((reg, entry) -> sb.append("\t").append(reg).append(": ").append(entry).append('\n'))));
             }
             successfulConnection.set(missingData.isEmpty());
             registryMismatches.set(missingData);
+            block.countDown();
         });
         LOGGER.debug(FMLHSMARKER, "Waiting for registries to load.");
         try {
-            future.join();
-        } catch (CancellationException | CompletionException e) {
-            LOGGER.error(FMLHSMARKER, "Internal error when loading registry data", e);
-            this.manager.disconnect(Component.literal("Internal error when loading registry data: " + e));
-            return false;
+            block.await();
+        } catch (InterruptedException e) {
+            Thread.interrupted();
         }
         if (successfulConnection.get()) {
             LOGGER.debug(FMLHSMARKER, "Registry load complete, continuing handshake.");

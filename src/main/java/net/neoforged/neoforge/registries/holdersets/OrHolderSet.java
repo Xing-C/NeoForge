@@ -44,7 +44,7 @@ public class OrHolderSet<T> extends CompositeHolderSet<T> {
 
     @Override
     public HolderSetType type() {
-        return NeoForgeMod.OR_HOLDER_SET.value();
+        return NeoForgeMod.OR_HOLDER_SET.get();
     }
 
     @Override

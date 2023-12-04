@@ -42,6 +42,7 @@ import net.neoforged.neoforge.common.ToolAction;
 import net.neoforged.neoforge.common.ToolActions;
 import net.neoforged.neoforge.common.capabilities.ICapabilityProvider;
 import net.neoforged.neoforge.items.wrapper.ShulkerItemStackInvWrapper;
+import net.neoforged.neoforge.registries.IForgeRegistry;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -589,7 +590,7 @@ public interface IItemExtension {
      *
      * @param itemStack the ItemStack to check
      * @return the Mod ID for the ItemStack, or null when there is no specially
-     *         associated mod and {@link net.minecraft.core.Registry#getKey(Object)} would return null.
+     *         associated mod and {@link IForgeRegistry#getKey(Object)} would return null.
      */
     @Nullable
     default String getCreatorModId(ItemStack itemStack) {

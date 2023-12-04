@@ -196,7 +196,7 @@ public interface IEntityExtension extends ICapabilitySerializable<CompoundTag> {
     default float getStepHeight() {
         float vanillaStep = self().maxUpStep();
         if (self() instanceof LivingEntity living) {
-            AttributeInstance stepHeightAttribute = living.getAttribute(NeoForgeMod.STEP_HEIGHT.value());
+            AttributeInstance stepHeightAttribute = living.getAttribute(NeoForgeMod.STEP_HEIGHT.get());
             if (stepHeightAttribute != null) {
                 return (float) Math.max(0, vanillaStep + stepHeightAttribute.getValue());
             }

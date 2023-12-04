@@ -36,7 +36,7 @@ public class IntersectionIngredient extends Ingredient {
             matchers.remove(ingredient);
 
             return new IntersectionValue(value, matchers);
-        })), NeoForgeMod.INTERSECTION_INGREDIENT_TYPE);
+        })), NeoForgeMod.INTERSECTION_INGREDIENT_TYPE::get);
 
         this.children = Collections.unmodifiableList(children);
     }
