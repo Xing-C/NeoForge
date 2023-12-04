@@ -13,6 +13,7 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeManager;
 import net.minecraft.world.item.crafting.RecipeSerializer;
+import org.jetbrains.annotations.Nullable;
 
 public class ConditionalRecipe<T extends Recipe<?>> implements RecipeSerializer<T> {
     public static final Codec<Recipe<?>> CONDITIONAL_RECIPES_CODEC = RecipeManager.CONDITIONAL_DISPATCH.listOf().fieldOf("recipes")
@@ -26,8 +27,8 @@ public class ConditionalRecipe<T extends Recipe<?>> implements RecipeSerializer<
 
     // Should never get here as it's a wrapper
     @Override
-    public T fromNetwork(FriendlyByteBuf p_44106_) {
-        throw new UnsupportedOperationException("Attempted to write conditional recipe to network; this is a wrapper class!");
+    public @Nullable T fromNetwork(FriendlyByteBuf p_44106_) {
+        return null;
     }
 
     @Override
