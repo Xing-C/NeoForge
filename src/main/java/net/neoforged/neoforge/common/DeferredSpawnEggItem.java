@@ -83,15 +83,13 @@ public class DeferredSpawnEggItem extends SpawnEggItem {
     private static class CommonHandler {
         @SubscribeEvent
         public static void onCommonSetup(FMLCommonSetupEvent event) {
-            event.enqueueWork(() -> {
-                MOD_EGGS.forEach(egg -> {
-                    DispenseItemBehavior dispenseBehavior = egg.createDispenseBehavior();
-                    if (dispenseBehavior != null) {
-                        DispenserBlock.registerBehavior(egg, dispenseBehavior);
-                    }
+            MOD_EGGS.forEach(egg -> {
+                DispenseItemBehavior dispenseBehavior = egg.createDispenseBehavior();
+                if (dispenseBehavior != null) {
+                    DispenserBlock.registerBehavior(egg, dispenseBehavior);
+                }
 
-                    TYPE_MAP.put(egg.typeSupplier.get(), egg);
-                });
+                TYPE_MAP.put(egg.typeSupplier.get(), egg);
             });
         }
     }
@@ -100,7 +98,7 @@ public class DeferredSpawnEggItem extends SpawnEggItem {
     private static class ColorRegisterHandler {
         @SubscribeEvent(priority = EventPriority.HIGHEST)
         public static void registerSpawnEggColors(RegisterColorHandlersEvent.Item event) {
-            MOD_EGGS.forEach(egg -> event.register((stack, layer) -> egg.getColor(layer), egg));
+            MOD_EGGS.forEach(egg -> event.getItemColors().register((stack, layer) -> egg.getColor(layer), egg));
         }
     }
 }
