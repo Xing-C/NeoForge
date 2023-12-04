@@ -26,7 +26,7 @@ public class DynamicFluidContainerModelBuilder<T extends ModelBuilder<T>> extend
     private Boolean applyFluidLuminosity;
 
     protected DynamicFluidContainerModelBuilder(T parent, ExistingFileHelper existingFileHelper) {
-        super(new ResourceLocation("neoforge:fluid_container"), parent, existingFileHelper, false);
+        super(new ResourceLocation("neoforge:fluid_container"), parent, existingFileHelper);
     }
 
     public DynamicFluidContainerModelBuilder<T> fluid(Fluid fluid) {

@@ -190,10 +190,7 @@ public class ModelBuilder<T extends ModelBuilder<T>> extends ModelFile {
     }
 
     public ElementBuilder element() {
-        Preconditions.checkState(
-                customLoader == null || customLoader.allowInlineElements,
-                "Custom model loader %s does not support inline elements",
-                customLoader != null ? customLoader.loaderId : null);
+        Preconditions.checkState(customLoader == null, "Cannot use elements and custom loaders at the same time");
         ElementBuilder ret = new ElementBuilder();
         elements.add(ret);
         return ret;
@@ -207,10 +204,7 @@ public class ModelBuilder<T extends ModelBuilder<T>> extends ModelFile {
      * @throws IndexOutOfBoundsException if {@code} index is out of bounds
      */
     public ElementBuilder element(int index) {
-        Preconditions.checkState(
-                customLoader == null || customLoader.allowInlineElements,
-                "Custom model loader %s does not support inline elements",
-                customLoader != null ? customLoader.loaderId : null);
+        Preconditions.checkState(customLoader == null, "Cannot use elements and custom loaders at the same time");
         Preconditions.checkElementIndex(index, elements.size(), "Element index");
         return elements.get(index);
     }
@@ -229,12 +223,9 @@ public class ModelBuilder<T extends ModelBuilder<T>> extends ModelFile {
      * @return the custom loader builder
      */
     public <L extends CustomLoaderBuilder<T>> L customLoader(BiFunction<T, ExistingFileHelper, L> customLoaderFactory) {
+        Preconditions.checkState(elements.size() == 0, "Cannot use elements and custom loaders at the same time");
         Preconditions.checkNotNull(customLoaderFactory, "customLoaderFactory must not be null");
         L customLoader = customLoaderFactory.apply(self(), existingFileHelper);
-        Preconditions.checkState(
-                customLoader.allowInlineElements || elements.isEmpty(),
-                "Custom model loader %s does not support inline elements",
-                customLoader.loaderId);
         this.customLoader = customLoader;
         return customLoader;
     }

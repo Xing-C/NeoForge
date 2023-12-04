@@ -46,7 +46,6 @@ public class ExtendedBlockModelDeserializer extends BlockModel.Deserializer {
             .registerTypeAdapter(Transformation.class, new TransformationHelper.Deserializer())
             .create();
 
-    @Override
     public BlockModel deserialize(JsonElement element, Type targetType, JsonDeserializationContext deserializationContext) throws JsonParseException {
         BlockModel model = super.deserialize(element, targetType, deserializationContext);
         JsonObject jsonobject = element.getAsJsonObject();
@@ -83,24 +82,10 @@ public class ExtendedBlockModelDeserializer extends BlockModel.Deserializer {
         if (!object.has("loader"))
             return null;
 
-        ResourceLocation name;
-        boolean optional;
-        if (object.get("loader").isJsonObject()) {
-            JsonObject loaderObj = object.getAsJsonObject("loader");
-            name = new ResourceLocation(GsonHelper.getAsString(loaderObj, "id"));
-            optional = GsonHelper.getAsBoolean(loaderObj, "optional", false);
-        } else {
-            name = new ResourceLocation(GsonHelper.getAsString(object, "loader"));
-            optional = false;
-        }
-
+        var name = new ResourceLocation(GsonHelper.getAsString(object, "loader"));
         var loader = GeometryLoaderManager.get(name);
-        if (loader == null) {
-            if (optional) {
-                return null;
-            }
+        if (loader == null)
             throw new JsonParseException(String.format(Locale.ENGLISH, "Model loader '%s' not found. Registered loaders: %s", name, GeometryLoaderManager.getLoaderList()));
-        }
 
         return loader.read(object, deserializationContext);
     }
