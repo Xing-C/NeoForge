@@ -1,3 +1,10 @@
+#这个库只适合私人使用，并且代码不会更新，它已经完成了它的使命， 你应该去查看官方信息。
+#This library is for private use only and the code will not be updated, it has fulfilled its mission and you should check the official information.
+
+
+
+
+
 ![NeoForged Logo](assets/neoforged_logo.png)
 
 NeoForge
