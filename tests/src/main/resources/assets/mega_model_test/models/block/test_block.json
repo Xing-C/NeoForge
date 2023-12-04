@@ -2,10 +2,12 @@
   "loader": "neoforge:separate_transforms",
   "base": {
     "parent": "block/block",
-    "loader": "neoforge:composite",
-    "children": {
+    "loader": "forge:composite",
+    "__CHANGE_WHEN_UPDATING_TO_1.20": "REPLACE 'parts' WITH 'children' IN 1.20 OR THIS WILL NOT LOAD",
+    "parts": {
       "first": {
-        "loader": "neoforge:elements",
+        "__CHANGE_WHEN_UPDATING_TO_1": "REPLACE 'minecraft:elements' WITH 'forge:elements' IN 1.20 OR THIS WILL NOT LOAD",
+        "loader": "minecraft:elements",
         "textures": {
           "tex": "minecraft:block/smooth_stone"
         },
@@ -25,7 +27,7 @@
         ]
       },
       "second": {
-        "loader": "neoforge:elements",
+        "loader": "forge:elements",
         "render_type": "cutout",
         "textures": {
           "tex": "minecraft:block/oak_leaves"
@@ -46,7 +48,7 @@
         ]
       },
       "third": {
-        "loader": "neoforge:elements",
+        "loader": "forge:elements",
         "render_type": "translucent",
         "textures": {
           "tex": "minecraft:block/slime_block"
@@ -70,8 +72,8 @@
   },
   "perspectives": {
     "firstperson_lefthand": {
-      "parent": "neoforge:item/default",
-      "loader": "neoforge:item_layers",
+      "parent": "forge:item/default",
+      "loader": "forge:item_layers",
       "textures": {
         "layer0": "minecraft:item/chainmail_chestplate",
         "layer1": "minecraft:item/bow"
@@ -79,8 +81,8 @@
       "emissive_layers": [ 1 ]
     },
     "firstperson_righthand": {
-      "parent": "neoforge:item/default",
-      "loader": "neoforge:fluid_container",
+      "parent": "forge:item/default",
+      "loader": "forge:fluid_container",
       "fluid": "minecraft:lava",
       "gui_light": "front",
       "textures": {

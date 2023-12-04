@@ -1,5 +1,5 @@
 {
-  "parent": "neoforge:dummy_parent",
+  "parent": "forge:dummy_parent",
   "criteria": {
     "get_cobbleStone": {
       "conditions": {
