@@ -61,7 +61,7 @@
           List<BlockEntity> list = sectionrenderdispatcher$rendersection.getCompiled().getRenderableBlockEntities();
           if (!list.isEmpty()) {
              for(BlockEntity blockentity1 : list) {
-+               if (!net.neoforged.neoforge.client.ClientHooks.isBlockEntityRendererVisible(blockEntityRenderDispatcher, blockentity1, frustum)) continue;
++               if(!frustum.isVisible(blockentity1.getRenderBoundingBox())) continue;
                 BlockPos blockpos4 = blockentity1.getBlockPos();
                 MultiBufferSource multibuffersource1 = multibuffersource$buffersource;
                 p_109600_.pushPose();
@@ -79,7 +79,7 @@
  
        synchronized(this.globalBlockEntities) {
           for(BlockEntity blockentity : this.globalBlockEntities) {
-+            if (!net.neoforged.neoforge.client.ClientHooks.isBlockEntityRendererVisible(blockEntityRenderDispatcher, blockentity, frustum)) continue;
++            if(!frustum.isVisible(blockentity.getRenderBoundingBox())) continue;
              BlockPos blockpos3 = blockentity.getBlockPos();
              p_109600_.pushPose();
              p_109600_.translate((double)blockpos3.getX() - d0, (double)blockpos3.getY() - d1, (double)blockpos3.getZ() - d2);
